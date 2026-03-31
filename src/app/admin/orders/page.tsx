@@ -1,3 +1,4 @@
+// src/app/admin/orders/page.tsx
 import AdminGuard from "@/components/AdminGuard"
 import { prisma } from "@/lib/prisma"
 
@@ -36,14 +37,14 @@ export default async function AdminOrdersPage() {
 
   return (
     <AdminGuard>
-      <div>
-        <h1 className="mb-6 text-3xl font-bold">Manage Orders</h1>
+      <div className="container mx-auto px-4 py-10">
+        <h1 className="mb-8 text-3xl font-bold">Manage Orders</h1>
 
         {orders.length === 0 ? (
-          <p>No orders yet.</p>
+          <p className="text-gray-600">No orders yet.</p>
         ) : (
           <div className="space-y-6">
-            {orders.map((order: OrderWithRelations) => (
+            {orders.map((order) => (
               <div key={order.id} className="rounded-2xl border p-6 shadow-md">
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                   <div>
