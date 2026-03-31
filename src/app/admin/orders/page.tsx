@@ -1,27 +1,25 @@
 import { prisma } from "@/lib/prisma"
 
-type ProductItem = {
-  id: string
-  name: string
-  imageUrl: string
-}
-
-type OrderItem = {
-  id: string
-  quantity: number
-  price: number
-  product: ProductItem
-}
-
-type OrderWithItems = {
-  id: string
-  status: string
-  totalAmount: number
-  items: OrderItem[]
+// Types ko thora asan kar diya taakay error na aaye
+interface OrderWithItems {
+  id: string;
+  status: string;
+  totalAmount: number;
+  items: {
+    id: string;
+    quantity: number;
+    price: number;
+    product: {
+      id: string;
+      name: string;
+      imageUrl: string;
+    };
+  }[];
 }
 
 export default async function OrdersPage() {
-  const orders: OrderWithItems[] = await prisma.order.findMany({
+  // Prisma query mein types ka dhyan rakha hai
+  const orders = await prisma.order.findMany({
     include: {
       items: {
         include: {
@@ -30,7 +28,7 @@ export default async function OrdersPage() {
       },
     },
     orderBy: { createdAt: "desc" },
-  })
+  }) as unknown as OrderWithItems[];
 
   return (
     <div className="container mx-auto px-4 py-10">
@@ -40,17 +38,17 @@ export default async function OrdersPage() {
         <p className="text-gray-600">No orders yet.</p>
       ) : (
         <div className="space-y-6">
-          {orders.map((order: OrderWithItems) => (
+          {orders.map((order) => (
             <div key={order.id} className="rounded-2xl border p-6 shadow-md">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <p className="font-semibold">Order ID: {order.id}</p>
-                <span className="rounded-full bg-black px-3 py-1 text-sm text-white">
+                <p className="font-semibold text-sm sm:text-base">Order ID: {order.id}</p>
+                <span className="rounded-full bg-black px-3 py-1 text-xs sm:text-sm text-white uppercase">
                   {order.status}
                 </span>
               </div>
 
               <div className="space-y-3">
-                {order.items.map((item: OrderItem) => (
+                {order.items.map((item) => (
                   <div key={item.id} className="flex items-center gap-4">
                     <img
                       src={item.product.imageUrl}
