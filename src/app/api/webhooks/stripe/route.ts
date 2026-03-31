@@ -4,6 +4,16 @@ import Stripe from "stripe"
 import { stripe } from "@/lib/stripe"
 import { prisma } from "@/lib/prisma"
 
+type CartItemWithProduct = {
+  id: string
+  cartId: string
+  productId: string
+  quantity: number
+  product: {
+    price: number
+  }
+}
+
 export async function POST(req: Request) {
   const body = await req.text()
   const signature = (await headers()).get("stripe-signature") as string
@@ -29,7 +39,10 @@ export async function POST(req: Request) {
       const stripeSessionId = session.id
 
       if (!userId) {
-        return NextResponse.json({ error: "Missing userId in metadata" }, { status: 400 })
+        return NextResponse.json(
+          { error: "Missing userId in metadata" },
+          { status: 400 }
+        )
       }
 
       const existingOrder = await prisma.order.findFirst({
@@ -52,11 +65,18 @@ export async function POST(req: Request) {
       })
 
       if (!cart || cart.items.length === 0) {
-        return NextResponse.json({ error: "Cart not found or empty" }, { status: 400 })
+        return NextResponse.json(
+          { error: "Cart not found or empty" },
+          { status: 400 }
+        )
       }
 
-      const totalAmount = cart.items.reduce(
-        (sum, item) => sum + item.product.price * item.quantity,
+      const cartItems = cart.items as CartItemWithProduct[]
+
+      const totalAmount: number = cartItems.reduce(
+        (sum: number, item: CartItemWithProduct) => {
+          return sum + item.product.price * item.quantity
+        },
         0
       )
 
@@ -67,7 +87,7 @@ export async function POST(req: Request) {
           status: "PAID",
           stripeSessionId,
           items: {
-            create: cart.items.map((item) => ({
+            create: cartItems.map((item: CartItemWithProduct) => ({
               productId: item.productId,
               quantity: item.quantity,
               price: item.product.price,
@@ -86,6 +106,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ received: true })
   } catch (error) {
     console.error("STRIPE_WEBHOOK_PROCESSING_ERROR", error)
-    return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Webhook processing failed" },
+      { status: 500 }
+    )
   }
 }
