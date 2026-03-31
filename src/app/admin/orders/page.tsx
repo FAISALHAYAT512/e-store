@@ -1,24 +1,27 @@
 import { prisma } from "@/lib/prisma"
 
-type OrderWithRelations = {
+type ProductItem = {
+  id: string
+  name: string
+  imageUrl: string
+}
+
+type OrderItem = {
+  id: string
+  quantity: number
+  price: number
+  product: ProductItem
+}
+
+type OrderWithItems = {
   id: string
   status: string
   totalAmount: number
-  createdAt: Date
-  items: {
-    id: string
-    quantity: number
-    price: number
-    product: {
-      id: string
-      name: string
-      imageUrl: string
-    }
-  }[]
+  items: OrderItem[]
 }
 
 export default async function OrdersPage() {
-  const orders: OrderWithRelations[] = await prisma.order.findMany({
+  const orders: OrderWithItems[] = await prisma.order.findMany({
     include: {
       items: {
         include: {
@@ -37,7 +40,7 @@ export default async function OrdersPage() {
         <p className="text-gray-600">No orders yet.</p>
       ) : (
         <div className="space-y-6">
-          {orders.map((order: OrderWithRelations) => (
+          {orders.map((order: OrderWithItems) => (
             <div key={order.id} className="rounded-2xl border p-6 shadow-md">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <p className="font-semibold">Order ID: {order.id}</p>
@@ -47,7 +50,7 @@ export default async function OrdersPage() {
               </div>
 
               <div className="space-y-3">
-                {order.items.map((item) => (
+                {order.items.map((item: OrderItem) => (
                   <div key={item.id} className="flex items-center gap-4">
                     <img
                       src={item.product.imageUrl}
