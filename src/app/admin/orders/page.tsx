@@ -28,7 +28,9 @@ export default async function AdminOrdersPage() {
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="font-bold">Order: {order.id}</p>
-                    <p className="text-sm text-zinc-500">Customer: {order.user.email}</p>
+                    <p className="text-sm text-zinc-500">
+                      Customer: {order.user?.email || "Guest User"}
+                    </p>
                   </div>
 
                   <span className="rounded-full bg-black px-3 py-1 text-sm text-white">
@@ -40,14 +42,14 @@ export default async function AdminOrdersPage() {
                   {order.items.map((item) => (
                     <div key={item.id} className="flex items-center gap-4">
                       <img
-                        src={item.product.imageUrl}
+                        src={item.product.imageUrl || "/placeholder.png"}
                         alt={item.product.name}
                         className="h-16 w-16 rounded-xl object-cover"
                       />
                       <div className="flex-1">
                         <p className="font-medium">{item.product.name}</p>
                         <p className="text-sm text-zinc-500">
-                          Qty: {item.quantity} × ${item.price}
+                          Qty: {item.quantity} × ${Number(item.price).toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -55,7 +57,7 @@ export default async function AdminOrdersPage() {
                 </div>
 
                 <div className="mt-4 text-right text-xl font-bold">
-                  Total: ${order.totalAmount.toFixed(2)}
+                  Total: ${Number(order.totalAmount).toFixed(2)}
                 </div>
               </div>
             ))}
