@@ -3,8 +3,17 @@ import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 import DeleteProductButton from "@/components/DeleteProductButton"
 
+type ProductType = {
+  id: string
+  name: string
+  price: number
+  stock: number
+  imageUrl: string
+  createdAt: Date
+}
+
 export default async function AdminProductsPage() {
-  const products = await prisma.product.findMany({
+  const products: ProductType[] = await prisma.product.findMany({
     orderBy: { createdAt: "desc" },
   })
 
@@ -25,7 +34,7 @@ export default async function AdminProductsPage() {
           <p>No products found.</p>
         ) : (
           <div className="space-y-4">
-            {products.map((product) => (
+            {products.map((product: ProductType) => (
               <div
                 key={product.id}
                 className="flex flex-col gap-4 rounded-2xl border p-4 shadow-sm md:flex-row md:items-center"
@@ -38,7 +47,7 @@ export default async function AdminProductsPage() {
 
                 <div className="flex-1">
                   <h3 className="text-lg font-bold">{product.name}</h3>
-                  <p className="text-zinc-600">${product.price}</p>
+                  <p className="text-zinc-600">${product.price.toFixed(2)}</p>
                   <p className="text-sm text-zinc-500">Stock: {product.stock}</p>
                 </div>
 
