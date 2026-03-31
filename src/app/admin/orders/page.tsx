@@ -1,8 +1,28 @@
 import AdminGuard from "@/components/AdminGuard"
 import { prisma } from "@/lib/prisma"
 
+type OrderWithRelations = {
+  id: string
+  status: string
+  totalAmount: number
+  createdAt: Date
+  user: {
+    email: string
+  } | null
+  items: {
+    id: string
+    quantity: number
+    price: number
+    product: {
+      id: string
+      name: string
+      imageUrl: string
+    }
+  }[]
+}
+
 export default async function AdminOrdersPage() {
-  const orders = await prisma.order.findMany({
+  const orders: OrderWithRelations[] = await prisma.order.findMany({
     include: {
       user: true,
       items: {
@@ -23,13 +43,13 @@ export default async function AdminOrdersPage() {
           <p>No orders yet.</p>
         ) : (
           <div className="space-y-6">
-            {orders.map((order) => (
+            {orders.map((order: OrderWithRelations) => (
               <div key={order.id} className="rounded-2xl border p-6 shadow-md">
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="font-bold">Order: {order.id}</p>
                     <p className="text-sm text-zinc-500">
-                      Customer: {order.user?.email || "Guest User"}
+                      Customer: {order.user?.email || "No email"}
                     </p>
                   </div>
 
@@ -42,14 +62,14 @@ export default async function AdminOrdersPage() {
                   {order.items.map((item) => (
                     <div key={item.id} className="flex items-center gap-4">
                       <img
-                        src={item.product.imageUrl || "/placeholder.png"}
+                        src={item.product.imageUrl}
                         alt={item.product.name}
                         className="h-16 w-16 rounded-xl object-cover"
                       />
                       <div className="flex-1">
                         <p className="font-medium">{item.product.name}</p>
                         <p className="text-sm text-zinc-500">
-                          Qty: {item.quantity} × ${Number(item.price).toFixed(2)}
+                          Qty: {item.quantity} × ${item.price}
                         </p>
                       </div>
                     </div>
@@ -57,7 +77,7 @@ export default async function AdminOrdersPage() {
                 </div>
 
                 <div className="mt-4 text-right text-xl font-bold">
-                  Total: ${Number(order.totalAmount).toFixed(2)}
+                  Total: ${order.totalAmount.toFixed(2)}
                 </div>
               </div>
             ))}
