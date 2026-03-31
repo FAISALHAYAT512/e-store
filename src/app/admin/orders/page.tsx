@@ -1,11 +1,11 @@
 import { prisma } from "@/lib/prisma"
 
 export default async function OrdersPage() {
-  // Database se data fetch karne ki koshish, agar fail ho to empty array
-  let orders: any = [];
+  // Database se data lane ki koshish
+  let orders: any[] = [];
   
   try {
-    orders = await prisma.order.findMany({
+    const data = await prisma.order.findMany({
       include: {
         items: {
           include: {
@@ -15,55 +15,64 @@ export default async function OrdersPage() {
       },
       orderBy: { createdAt: "desc" },
     });
+    orders = data || [];
   } catch (e) {
     orders = [];
+  }
+
+  // Display ke liye array tyyar kar rahe hain loop ke zariye
+  const orderElements = [];
+  for (const order of orders) {
+    const itemElements = [];
+    
+    // Items ka loop
+    if (order.items) {
+      for (const item of order.items) {
+        itemElements.push(
+          <div key={item.id} className="flex items-center gap-4">
+            <img
+              src={item.product?.imageUrl || ""}
+              alt={item.product?.name || "product"}
+              className="h-16 w-16 rounded-xl object-cover"
+            />
+            <div className="flex-1">
+              <p className="font-medium">{item.product?.name}</p>
+              <p className="text-sm text-zinc-500">
+                Qty: {item.quantity} × ${item.price}
+              </p>
+            </div>
+          </div>
+        );
+      }
+    }
+
+    // Order Card
+    orderElements.push(
+      <div key={order.id} className="rounded-2xl border p-6 shadow-md">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <p className="font-semibold text-sm">Order ID: {order.id}</p>
+          <span className="rounded-full bg-black px-3 py-1 text-xs text-white uppercase">
+            {order.status}
+          </span>
+        </div>
+
+        <div className="space-y-3">{itemElements}</div>
+
+        <div className="mt-4 text-right text-xl font-bold">
+          Total: ${Number(order.totalAmount || 0).toFixed(2)}
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="container mx-auto px-4 py-10">
       <h1 className="mb-8 text-3xl font-bold">Your Orders</h1>
-
-      {(!orders || orders.length === 0) ? (
+      {orderElements.length === 0 ? (
         <p className="text-gray-600">No orders yet.</p>
       ) : (
-        <div className="space-y-6">
-          {/* Yahan explicit 'any' bracket ke saath hai */}
-          {orders.map((order: any) => (
-            <div key={order?.id} className="rounded-2xl border p-6 shadow-md">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <p className="font-semibold text-sm">Order ID: {order?.id}</p>
-                <span className="rounded-full bg-black px-3 py-1 text-xs text-white uppercase">
-                  {order?.status || "Pending"}
-                </span>
-              </div>
-
-              <div className="space-y-3">
-                {order?.items?.map((item: any) => (
-                  <div key={item?.id} className="flex items-center gap-4">
-                    {item?.product?.imageUrl && (
-                      <img
-                        src={item.product.imageUrl}
-                        alt={item.product.name}
-                        className="h-16 w-16 rounded-xl object-cover"
-                      />
-                    )}
-                    <div className="flex-1">
-                      <p className="font-medium">{item?.product?.name || "Product"}</p>
-                      <p className="text-sm text-zinc-500">
-                        Qty: {item?.quantity} × ${item?.price}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-4 text-right text-xl font-bold">
-                Total: ${Number(order?.totalAmount || 0).toFixed(2)}
-              </div>
-            </div>
-          ))}
-        </div>
+        <div className="space-y-6">{orderElements}</div>
       )}
     </div>
-  )
+  );
 }
